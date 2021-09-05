@@ -2,6 +2,7 @@ import sys
 import traceback
 import pygame as pg
 import logging
+from .scaling import scale
 
 # logger for this file
 logger = logging.getLogger(__name__)
@@ -15,8 +16,8 @@ logger.addHandler(handler)
 
 class WSRobot:
 
-    def __init__(self, id, color, base, joint_width, base_width, scaling, base_shoulder_width,
-                 shoulder_elbow_width, elbow_wrist_width):
+    def __init__(self, id, color, base, joint_width, base_width, base_shoulder_width,
+                 shoulder_elbow_width, elbow_wrist_width, warn_zone, red_zone):
         """
         Initialization of Visualization for robots in workspace
 
@@ -25,13 +26,11 @@ class WSRobot:
         :param base: robot base coordinates
         :param joint_width: robot joints (shoulder, elbow, wrist) radius
         :param base_width: robot base radius
-        :param scaling: image scaling
         :param base_shoulder_width: width of base-shoulder line segment
         :param shoulder_elbow_width: width of shoulder-elbow line segment
         :param elbow_wrist_width: width of elbow-wrist line segment
         """
         self.id = id
-        self.scaling = scaling
         self.color = color
         self.base = base
         self.shoulder = base
@@ -42,6 +41,8 @@ class WSRobot:
         self.base_shoulder_width = base_shoulder_width
         self.shoulder_elbow_width = shoulder_elbow_width
         self.elbow_wrist_width = elbow_wrist_width
+        self.warn_zone = warn_zone
+        self.red_zone = red_zone
 
     def draw(self, screen):
         """
@@ -49,48 +50,56 @@ class WSRobot:
         :param screen: rendering screen object from pygame
         :return: None
         """
-        pg.draw.line(surface=screen, color=self.color, start_pos=self.scale(self.base),
-                     end_pos=self.scale(self.shoulder), width=self.base_shoulder_width)
-        pg.draw.line(surface=screen, color=self.color, start_pos=self.scale(self.shoulder),
-                     end_pos=self.scale(self.elbow), width=self.shoulder_elbow_width)
-        pg.draw.line(surface=screen, color=self.color, start_pos=self.scale(self.elbow), end_pos=self.scale(self.wrist),
+        pg.draw.circle(surface=screen,
+                       color=pg.Color(self.warn_zone["color"]),
+                       center=scale(self.base),
+                       radius=scale(self.warn_zone["size"]))
+
+        pg.draw.circle(surface=screen,
+                       color=pg.Color(self.red_zone["color"]),
+                       center=scale(self.base),
+                       radius=scale(self.red_zone["size"]))
+
+        pg.draw.line(surface=screen,
+                     color=self.color,
+                     start_pos=scale(self.base),
+                     end_pos=scale(self.shoulder),
+                     width=self.base_shoulder_width)
+
+        pg.draw.line(surface=screen,
+                     color=self.color,
+                     start_pos=scale(self.shoulder),
+                     end_pos=scale(self.elbow),
+                     width=self.shoulder_elbow_width)
+
+        pg.draw.line(surface=screen,
+                     color=self.color,
+                     start_pos=scale(self.elbow),
+                     end_pos=scale(self.wrist),
                      width=self.elbow_wrist_width)
-        pg.draw.circle(surface=screen, color=self.color, center=self.scale(self.base), radius=self.base_width)
-        pg.draw.circle(surface=screen, color=self.color, center=self.scale(self.shoulder), radius=self.joint_width)
-        pg.draw.circle(surface=screen, color=(255, 255, 255), center=self.scale(self.shoulder),
+
+        pg.draw.circle(surface=screen,
+                       color=self.color,
+                       center=scale(self.base),
+                       radius=self.base_width)
+
+        pg.draw.circle(surface=screen,
+                       color=self.color,
+                       center=scale(self.shoulder),
+                       radius=self.joint_width)
+
+        pg.draw.circle(surface=screen,
+                       color=(255, 255, 255),
+                       center=scale(self.shoulder),
                        radius=self.joint_width / 2)
 
-        pg.draw.circle(surface=screen, color=self.color, center=self.scale(self.elbow), radius=self.joint_width)
-        pg.draw.circle(surface=screen, color=(255, 255, 255), center=self.scale(self.elbow),
+        pg.draw.circle(surface=screen, color=self.color, center=scale(self.elbow), radius=self.joint_width)
+        pg.draw.circle(surface=screen, color=(255, 255, 255), center=scale(self.elbow),
                        radius=self.joint_width / 2)
 
-        pg.draw.circle(surface=screen, color=self.color, center=self.scale(self.wrist), radius=self.joint_width)
-        pg.draw.circle(surface=screen, color=(255, 255, 255), center=self.scale(self.wrist),
+        pg.draw.circle(surface=screen, color=self.color, center=scale(self.wrist), radius=self.joint_width)
+        pg.draw.circle(surface=screen, color=(255, 255, 255), center=scale(self.wrist),
                        radius=self.joint_width / 2)
-
-    def scale(self, value):
-        """
-        Coordinate scaling
-        :param value: coordinate value
-        :return: scaled coordinates
-        """
-        try:
-            if (type(value) is int) or (type(value) is float):
-                return value * self.scaling
-            elif type(value) is list:
-                return [v * self.scaling for v in value]
-            else:
-                raise AssertionError(f"Type {type(value)} is not scalable")
-        except AssertionError as e:
-            logging.critical(e)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            sys.exit()
-        except Exception as e:
-            logging.critical(e)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            sys.exit()
 
 
 class WSRobots:
@@ -111,10 +120,11 @@ class WSRobots:
                                            base=[0, 0],
                                            joint_width=robot["render"]["joint_width"],
                                            base_width=robot["render"]["base_width"],
-                                           scaling=robot["attributes"]["scaling"],
                                            base_shoulder_width=robot["render"]["base_shoulder"],
                                            shoulder_elbow_width=robot["render"]["shoulder_elbow"],
-                                           elbow_wrist_width=robot["render"]["shoulder_elbow"]
+                                           elbow_wrist_width=robot["render"]["shoulder_elbow"],
+                                           warn_zone=robot["render"]["warn_zone"],
+                                           red_zone=robot["render"]["red_zone"]
                                            ))
             for robot in self.robots:
                 robot.draw(screen=screen)

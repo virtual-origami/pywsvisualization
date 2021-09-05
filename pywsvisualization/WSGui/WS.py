@@ -8,10 +8,11 @@ from pywsvisualization.pub_sub.AMQPubSub import PubSubAMQP
 from .WSLayout import WSLayout
 from .WSParticle import WSParticles
 from .WSRobot import WSRobots
+from .scaling import get_scaling_factor
 
 # logger for this file
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler('/tmp/virtualwsgui.log')
 handler.setLevel(logging.ERROR)
 formatter = logging.Formatter('%(levelname)-8s-[%(filename)s:%(lineno)d]-%(message)s')
@@ -28,23 +29,34 @@ class WS:
         """
         try:
             self.id = workspace["id"]
-            self.scaling = workspace["attributes"]["scaling"]
-            self.dimensions = [workspace["render"]["dimensions"][0] * self.scaling,
-                               workspace["render"]["dimensions"][1] * self.scaling]
-            self.color = (workspace["render"]["color"][0], workspace["render"]["color"][1], workspace["render"]["color"][2])
+            self.dimensions = [workspace["render"]["dimensions"][0] * get_scaling_factor(),
+                               workspace["render"]["dimensions"][1] * get_scaling_factor()]
             self.type = workspace["render"]["type"]
-            self.interval = workspace["attributes"]["interval"]
             self.screen = pg.display.set_mode(self.dimensions)
             self.layout = WSLayout(config=workspace, screen=self.screen)
             self.particles = WSParticles(config=workspace["particles"], screen=self.screen)
             self.robots = WSRobots(config=workspace["robots"], screen=self.screen)
             self.event_loop = eventloop
+            protocol = workspace["protocol"]
+
+            # Subscriber
             self.subscribers = []
-            for pub_sub_config in workspace["protocol"]:
-                self.subscribers.append(PubSubAMQP(eventloop=self.event_loop,
-                                                   config_file=pub_sub_config,
-                                                   binding_suffix=self.id,
-                                                   app_callback=self._subscriber_callback))
+            if protocol["subscribers"] is not None:
+                for subscriber in protocol["subscribers"]:
+                    if subscriber["type"] == "amq":
+                        logger.debug('Setting Up AMQP Subcriber for Robot')
+                        self.subscribers.append(
+                            PubSubAMQP(
+                                eventloop=eventloop,
+                                config_file=subscriber,
+                                binding_suffix="",
+                                app_callback=self.consume_telemetry_msgs
+                            )
+                        )
+                    else:
+                        logger.error("Provide protocol amq config")
+                        raise AssertionError("Provide protocol amq config")
+
         except AssertionError as e:
             logging.critical(e)
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -56,38 +68,14 @@ class WS:
             logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
             sys.exit()
 
-    def _subscriber_callback(self, **kwargs):
+    async def connect(self):
         """
-        Subscriber callback
-        :param kwargs: keywork argument of the parameter passed
+        Connect AMQP Publisher and subscriber
         :return: None
         """
         try:
-            self.consume_telemetry_msgs(kwargs["exchange_name"], kwargs["binding_name"],
-                                        json.loads(kwargs["message_body"]))
-        except AssertionError as e:
-            logging.critical(e)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            sys.exit()
-        except Exception as e:
-            logging.critical(e)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            sys.exit()
-
-    def draw(self):
-        """
-        Draw workspace
-        1. Layout
-        2. robot
-        3. particle
-        :return: None
-        """
-        try:
-            self.layout.draw()
-            self.robots.draw()
-            self.particles.draw()
+            for subscriber in self.subscribers:
+                await subscriber.connect(mode="subscriber")
         except AssertionError as e:
             logging.critical(e)
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -108,10 +96,11 @@ class WS:
         :return: None
         """
         try:
-            if "telemetry.robot" in binding_name:
+            if "rmt.robot." in binding_name:
                 # extract robot id
                 binding_delimited_array = binding_name.split(".")
                 robot_id = binding_delimited_array[len(binding_delimited_array) - 1]
+                message_body = json.loads(message_body)
                 msg_attributes = message_body.keys()
                 if ("id" in msg_attributes) and \
                         ("shoulder" in msg_attributes) and \
@@ -119,7 +108,7 @@ class WS:
                         ("wrist" in msg_attributes) and \
                         ("base" in msg_attributes):
                     if robot_id == message_body["id"]:
-                        logger.debug(message_body)
+                        logger.debug(f'exchange: {exchange_name} msg: {message_body}')
                         base = [message_body["base"][0], message_body["base"][1]]
                         shoulder = [message_body["shoulder"][0], message_body["shoulder"][1]]
                         elbow = [message_body["elbow"][0], message_body["elbow"][1]]
@@ -133,7 +122,7 @@ class WS:
                         return False  # robot id in binding name and message body does not match
                 else:
                     return False  # invalid message body format
-            elif "telemetry.pls" in binding_name:
+            elif "plm.walker" in binding_name:
                 # extract walker id
                 binding_delimited_array = binding_name.split(".")
                 walker_id = binding_delimited_array[len(binding_delimited_array) - 1]
@@ -176,14 +165,18 @@ class WS:
             logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
             sys.exit()
 
-    async def connect(self):
+    def draw(self):
         """
-        Connect AMQP Publisher and subscriber
+        Draw workspace
+        1. Layout
+        2. robot
+        3. particle
         :return: None
         """
         try:
-            for subscriber in self.subscribers:
-                await subscriber.connect(mode="subscriber")
+            self.layout.draw()
+            self.robots.draw()
+            self.particles.draw()
         except AssertionError as e:
             logging.critical(e)
             exc_type, exc_value, exc_traceback = sys.exc_info()

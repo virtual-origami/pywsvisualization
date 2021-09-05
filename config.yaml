@@ -1,239 +1,243 @@
-scene:
-  version: "0.1"
+preset:
   amq: # AMQP Broker Information
-    broker: &amq_connect_info
+    broker: &amq_connect_info # amq broker information
       address: "localhost"
       port: 5672
-    credentials: &amq_credential
+    credentials: &amq_credential # amq credentials
       username: "admin"
       password: "rabbit"
   pub_sub:
-    - pub_sub_1: &pub_sub_1
+    - pub_sub_1: &sub_plm_walker
         type: "amq"
         broker: *amq_connect_info
         credential: *amq_credential
         exchange: "telemetry_exchange"
         binding_keys: # Default Queue Logic will be: <binding_key>.robot.<id>
-          - "telemetry.walker."
+          - "plm.walker."
+    - pub_sub_2: &sub_rmt_robot
+        type: "amq"
+        broker: *amq_connect_info
+        credential: *amq_credential
+        exchange: "rmt_robot"
+        binding_keys: # Default Queue Logic will be: <binding_key>.robot.<id>
+          - "rmt.robot."
   render:
-      workspace_render:
-        - workspace_1: &workspace_1
-            dimensions: [ 160, 200 ]
-            color: [ 255,255,255 ]
-            type: "2D"
-      obstacle_render:
-        - block: &block
-            type: "static"
-            color: [ 0,0,0 ]
-            shape: "polygon"
-        - wall: &wall
-            type: "static"
-            color: [ 0,0,0 ]
-            shape: "line"
-      robot_render:
-        - robot_1: &robot_1
-            color: [ 0,0,0 ]
-            base_width: 8
-            joint_width: 3
-            arm_width: 3
-            base_shoulder: 10
-            shoulder_elbow: 5
-            elbow_wrist: 5
-      particle_render:
-        - particle_1: &particle_1
-            ref_pos_color: [ 0,255,0 ]
-            uwb_pos_color: [ 0,0,0 ]
-            est_pos_color: [ 0,0,255 ]
-            ray_cast_color: [ 255,0,255 ]
-            size: 5
-      attributes: &attributes
-          scaling: 10
-          interval: 0.1
-  obstacles_1: &obstacles_1
-    - id: '1'
-      description: "wall-1"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 0,0 ]
-        - [ 0,2 ]
-        - [ 160,2 ]
-        - [ 160,0 ]
-    - id: '2'
-      description: "wall-2"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 0,200 ]
-        - [ 0,198 ]
-        - [ 160,198 ]
-        - [ 160,200 ]
-    - id: '3'
-      description: "wall-3"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 158,2 ]
-        - [ 160,2 ]
-        - [ 160,198 ]
-        - [ 158,198 ]
-    - id: '4'
-      description: "wall-4"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 0,2 ]
-        - [ 2,2 ]
-        - [ 2,198 ]
-        - [ 0,198 ]
-    - id: '5'
-      description: "wall-5"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 60,2 ]
-        - [ 62,2 ]
-        - [ 62,60 ]
-        - [ 60,60 ]
-    - id: '6'
-      description: "wall-6"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 60,70 ]
-        - [ 62,70 ]
-        - [ 62,100 ]
-        - [ 60,100 ]
-    - id: '7'
-      description: "wall-7"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 0,100 ]
-        - [ 0,102 ]
-        - [ 60,102 ]
-        - [ 60,100 ]
-    - id: '8'
-      description: "wall-8"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 60,100 ]
-        - [ 62,100 ]
-        - [ 62,160 ]
-        - [ 60,160 ]
-    - id: '9'
-      description: "wall-9"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 60,170 ]
-        - [ 62,170 ]
-        - [ 62,198 ]
-        - [ 60,198 ]
-    - id: '10'
-      description: "wall-10"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 100,2 ]
-        - [ 102,2 ]
-        - [ 102,60 ]
-        - [ 100,60 ]
-    - id: '11'
-      description: "wall-11"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 100,70 ]
-        - [ 102,70 ]
-        - [ 102,100 ]
-        - [ 100,100 ]
-    - id: '12'
-      description: "wall-12"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 100,100 ]
-        - [ 102,100 ]
-        - [ 102,160 ]
-        - [ 100,160 ]
-    - id: '13'
-      description: "wall-13"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 100,170 ]
-        - [ 102,170 ]
-        - [ 102,198 ]
-        - [ 100,198 ]
-    - id: '14'
-      description: "wall-14"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 100,100 ]
-        - [ 100,102 ]
-        - [ 160,102 ]
-        - [ 160,100 ]
-  obstacles_2: &obstacles_2
-    - id: '1'
-      description: "wall-1"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 0,0 ]
-        - [ 0,2 ]
-        - [ 100,2 ]
-        - [ 100,0 ]
-    - id: '2'
-      description: "wall-2"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 0,0 ]
-        - [ 2,0 ]
-        - [ 2,100 ]
-        - [ 0,100 ]
-    - id: '3'
-      description: "wall-3"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 0,100 ]
-        - [ 0,98 ]
-        - [ 100,98 ]
-        - [ 100,100 ]
-    - id: '4'
-      description: "wall-4"
-      render: *block
-      attributes: *attributes
-      points:
-        - [ 98,0 ]
-        - [ 100,0 ]
-        - [ 100,100 ]
-        - [ 98,100 ]
+    map_renders:
+      - map_render_1: &map_render_1
+          dimensions: [ 200, 200 ]
+          background_color: [ 255,255,255 ]
+          type: "2D"
+    warn_zone_renders:
+      - warn_zone_1: &warn_zone_1
+          size: 10
+          color: [ 255, 255, 0 ]
+    red_zone_renders:
+      - red_zone_1: &red_zone_1
+          size: 6
+          color: [ 255, 0, 0 ]
+    obstacle_renders:
+      - block: &block
+          type: "static"
+          color: [ 0,0,0 ]
+          shape: "polygon"
+      - wall: &wall
+          type: "static"
+          color: [ 0,0,0 ]
+          shape: "line"
+    robot_renders:
+      - robot_1: &robot_1
+          color: [ 0,0,0 ]
+          base_width: 8
+          joint_width: 3
+          arm_width: 3
+          base_shoulder: 5
+          shoulder_elbow: 3
+          elbow_wrist: 3
+          warn_zone: *warn_zone_1
+          red_zone: *red_zone_1
+    particle_renders:
+      - particle_1: &particle_1
+          ref_pos_color: [ 0,255,0 ]
+          uwb_pos_color: [ 0,0,0 ]
+          est_pos_color: [ 0,0,255 ]
+          ray_cast_color: [ 255,0,255 ]
+          size: 3
+    attributes: &attributes
+      scaling: 5
+      interval: 0.01
+  obstacle_layouts:
+    obstacles_layout_1: &obstacles_layout_1
+      - id: '1'
+        description: "wall-1"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 10,10 ]
+          - [ 160,10 ]
+      - id: '2'
+        description: "wall-2"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 160,10 ]
+          - [ 160,160 ]
+      - id: '3'
+        description: "wall-3"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 160,160 ]
+          - [ 10,160 ]
+      - id: '4'
+        description: "wall-4"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 10,160 ]
+          - [ 10,10 ]
+      - id: '5'
+        description: "wall-5"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 60,10 ]
+          - [ 60,30 ]
+      - id: '6'
+        description: "wall-6"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 100,10 ]
+          - [ 100,30 ]
+      - id: '7'
+        description: "wall-7"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 60,80 ]
+          - [ 60,110 ]
+      - id: '8'
+        description: "wall-8"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 60,130 ]
+          - [ 60,160 ]
+      - id: '9'
+        description: "wall-9"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 100,10 ]
+          - [ 100,30 ]
+      - id: '10'
+        description: "wall-10"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 100,50 ]
+          - [ 100,110 ]
+      - id: '11'
+        description: "wall-11"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 100,130 ]
+          - [ 100,160 ]
+      - id: '12'
+        description: "wall-12"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 10,80 ]
+          - [ 60,80 ]
+      - id: '13'
+        description: "wall-13"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 100,80 ]
+          - [ 160,80 ]
+      - id: '14'
+        description: "wall-14"
+        render: *wall
+        attributes: *attributes
+        width: 8
+        points:
+          - [ 60,50 ]
+          - [ 60,80 ]
+    obstacles_layout_2: &obstacles_layout_2
+      - id: '1'
+        description: "wall-1"
+        render: *wall
+        attributes: *attributes
+        width: 5
+        points:
+          - [ 10,10 ]
+          - [ 100,10 ]
+      - id: '2'
+        description: "wall-2"
+        render: *wall
+        attributes: *attributes
+        width: 5
+        points:
+          - [ 100,10 ]
+          - [ 100,100 ]
+      - id: '3'
+        description: "wall-3"
+        render: *wall
+        attributes: *attributes
+        width: 5
+        points:
+          - [ 100,100 ]
+          - [ 10,100 ]
+      - id: '4'
+        description: "wall-4"
+        render: *wall
+        attributes: *attributes
+        width: 5
+        points:
+          - [ 10,100 ]
+          - [ 10,10 ]
+  protocols:
+    - protocol_1: &protocol_1
+        publishers:
+        subscribers:
+          - *sub_plm_walker
+          - *sub_rmt_robot
+scene:
+  version: "0.1" # software version
+  attributes: *attributes
   robots: &robots
     - id: "1"
       render: *robot_1
-      attributes: *attributes
     - id: "2"
       render: *robot_1
-      attributes: *attributes
     - id: "3"
       render: *robot_1
-      attributes: *attributes
+    - id: "4"
+      render: *robot_1
   particles: &particles
-        - id: '1'
-          attributes: *attributes
-          render: *particle_1
-          initial_position: [40,40]
-  workspaces:
     - id: '1'
-      attributes: *attributes
-      render: *workspace_1
-      obstacles: *obstacles_2
+      render: *particle_1
+  maps:
+    - id: '1'
+      render: *map_render_1
+      obstacles: *obstacles_layout_1
       robots: *robots
       particles: *particles
-      protocol:
-        - *pub_sub_1
+      protocol: *protocol_1
+

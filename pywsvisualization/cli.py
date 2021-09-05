@@ -9,6 +9,7 @@ import traceback
 import pygame as pg
 import yaml
 from WSGui.WS import WS
+from WSGui.scaling import set_scaling_factor
 
 logging.basicConfig(level=logging.WARNING, format='%(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
@@ -26,6 +27,7 @@ asyncio_logger = logging.getLogger('asyncio')
 asyncio_logger.setLevel(logging.WARNING)
 
 is_sighup_received = False
+maps = []
 
 
 def parse_arguments():
@@ -50,98 +52,6 @@ def gui_event_handler():
             sys.exit()
 
 
-class WSApp:
-    """
-    Workspace Application
-    """
-
-    def __init__(self, config_file, event_loop):
-        """
-        Initialization of Workspace application
-        :param config_file: configuration file name
-        :param event_loop: event loop
-        """
-        try:
-            pg.init()
-            if os.path.exists(config_file):
-                with open(config_file, 'r') as yaml_file:
-                    yaml_as_dict = yaml.load(yaml_file, Loader=yaml.FullLoader)
-                    scene = yaml_as_dict["scene"]
-                    assert scene is not None, "Workspace configuration does not exists"
-                    assert event_loop is not None, "Event loop can't be none"
-                    self.workspaces = []
-                    for workspace in scene["workspaces"]:
-                        self.workspaces.append(WS(workspace=workspace, eventloop=event_loop))
-            else:
-                raise AssertionError("Configuration does not exists")
-        except FileNotFoundError as e:
-            logging.critical(e)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            sys.exit()
-        except OSError as e:
-            logging.critical(e)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            sys.exit()
-        except AssertionError as e:
-            logging.critical(e)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            sys.exit()
-        except yaml.YAMLError as e:
-            logging.critical(e)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            sys.exit()
-        except Exception as e:
-            logging.critical(e)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            sys.exit()
-
-    async def connect(self):
-        """
-        Connect AMQP Publisher and Subscriber
-        :return:
-        """
-        try:
-            for workspace in self.workspaces:
-                await workspace.connect()
-        except AssertionError as e:
-            logging.critical(e)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            sys.exit()
-        except Exception as e:
-            logging.critical(e)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            sys.exit()
-
-    async def visualization_loop(self):
-        """
-        vistualization loop
-        :return:
-        """
-        try:
-            gui_event_handler()
-            for workspace in self.workspaces:
-                workspace.draw()
-            pg.display.update()
-            await asyncio.sleep(0)
-        except AssertionError as e:
-            logging.critical(e)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            sys.exit()
-        except Exception as e:
-            logging.critical(e)
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.critical(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            sys.exit()
-
-
 async def app(eventloop, config):
     """
     Main Application
@@ -150,17 +60,30 @@ async def app(eventloop, config):
     """
     try:
         global is_sighup_received
+        global maps
 
         while True:
-            factory = WSApp(config_file=config, event_loop=eventloop)
-            await factory.connect()
+            scene_config = read_config(yaml_file=config, rootkey="scene")
+            set_scaling_factor(config=scene_config)
+            loop_interval = scene_config["attributes"]["interval"]
+            pg.init()
+            maps = []
+            for mape in scene_config["maps"]:
+                maps.append(WS(workspace=mape, eventloop=eventloop))
+
+            for workspace in maps:
+                await workspace.connect()
 
             # continuously monitor signal handle and update walker
             while not is_sighup_received:
-                await factory.visualization_loop()
+                gui_event_handler()
+                for workspace in maps:
+                    workspace.draw()
+                pg.display.update()
+                await asyncio.sleep(loop_interval)
 
             # If SIGHUP Occurs, Delete the instances
-            del factory
+            del maps
 
             # reset sighup handler flag
             is_sighup_received = False
