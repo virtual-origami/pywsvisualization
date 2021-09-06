@@ -7,20 +7,20 @@ preset:
       username: "admin"
       password: "rabbit"
   pub_sub:
-    - pub_sub_1: &sub_plm_walker
+    - pub_sub_1: &sub_visual_plm
         type: "amq"
         broker: *amq_connect_info
         credential: *amq_credential
-        exchange: "telemetry_exchange"
+        exchange: "visual"
         binding_keys: # Default Queue Logic will be: <binding_key>.robot.<id>
-          - "plm.walker."
-    - pub_sub_2: &sub_rmt_robot
+          - "visual.plm.personnel."
+    - pub_sub_2: &sub_visual_rmt
         type: "amq"
         broker: *amq_connect_info
         credential: *amq_credential
-        exchange: "rmt_robot"
+        exchange: "visual"
         binding_keys: # Default Queue Logic will be: <binding_key>.robot.<id>
-          - "rmt.robot."
+          - "visual.rmt.robot."
   render:
     map_renders:
       - map_render_1: &map_render_1
@@ -216,8 +216,8 @@ preset:
     - protocol_1: &protocol_1
         publishers:
         subscribers:
-          - *sub_plm_walker
-          - *sub_rmt_robot
+          - *sub_visual_plm
+          - *sub_visual_rmt
 scene:
   version: "0.1" # software version
   attributes: *attributes
