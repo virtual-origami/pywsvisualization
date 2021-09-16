@@ -1,16 +1,10 @@
 from __future__ import generator_stop
 from __future__ import annotations
-from pub_sub.AMQPubSub import PubSubAMQP
-from WSGui.WSLayout import WSLayout
-from WSGui.WSParticle import WSParticles
-from WSGui.WSRobot import WSRobots
-from WSGui.WS import WS
+from pywsvisualization.pub_sub.AMQPubSub import PubSubAMQP
+from pywsvisualization.WSGui.WS import WS
 
 __all__ = [
     'PubSubAMQP',
-    'WSLayout',
-    'WSParticles',
-    'WSRobots',
     'WS'
 ]
 

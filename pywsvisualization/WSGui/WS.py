@@ -2,9 +2,10 @@ import logging
 import json
 import sys
 import traceback
-
 import pygame as pg
-from pywsvisualization.pub_sub.AMQPubSub import PubSubAMQP
+
+from pywsvisualization.pub_sub import PubSubAMQP
+
 from .WSLayout import WSLayout
 from .WSParticle import WSParticles
 from .WSRobot import WSRobots

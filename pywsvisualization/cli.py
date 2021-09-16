@@ -8,8 +8,8 @@ import sys
 import traceback
 import pygame as pg
 import yaml
-from WSGui.WS import WS
-from WSGui.scaling import set_scaling_factor
+from pywsvisualization.WSGui import WS, set_scaling_factor
+
 
 logging.basicConfig(level=logging.WARNING, format='%(levelname)-8s [%(filename)s:%(lineno)d] %(message)s')
 
