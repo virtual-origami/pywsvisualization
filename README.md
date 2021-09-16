@@ -7,26 +7,38 @@ Python Package to visualization Human robot interaction in Virtual workspace
 
 1. Create a Virtual Environment
    
-        $ virtualenv -m venv venv
-
+    ```bash
+   $ virtualenv -m venv venv
+   ```
+   
 2. Activate Virtual Environment
 
-        $ . venv/bin/activate 
+    ```bash
+    $ . venv/bin/activate 
+    ```
 
 3. Install the Dependencies
 
-        pip install -r requirements.txt
+    ```bash
+    $ pip install -r requirements.txt
+    ```
 
 4. Install `pywsvisualization` as python package for development:
 
-        pip install -e .
-
+    ```bash
+   $ pip install -e .
+   ```
+   
    This makes the `ws-visualization` binary available as a CLI
 
 ### Usage
-Basic usage:
+Run `ws-visualization` binary on command line:
 
-    $ ws-visualization -c config.yaml
+- -c : configuration file path/name
+
+```bash
+$ ws-visualization -c config.yaml
+```
 
 ### Message Broker (RabbitMQ)
 
@@ -38,14 +50,20 @@ __NOTE__: The `rabbitmqtt` stack needs an external docker network called `iotsta
 
 1. To build Docker Images locally use:
 
-        docker build -t pywsvisualization .
+    ```bash
+    $ docker build -t pywsvisualization:<version> .
+    ```
 
 2. To run the Application along with the RabbitMQ Broker connect the container with the `iotstack` network using:
 
-        docker run --rm --network=iotstack pywsvisualization
-    
+    ```bash
+    $ docker run --rm --network=iotstack -t pywsvisualization:<version> -c config.yaml
+    ```
+
     __INFO__: Change the broker address in the `config.yaml` file to `rabbitmq` (name of the RabbitMQ Container in _rabbitmqtt_ stack)
 
 3. To run the a custom configuration for the Container use:
 
-        docker run --rm -v $(pwd)/config.yaml:/pywsvisualization/config.yaml --network=iotstack pywsvisualization
+    ```bash
+    $ docker run --rm -v $(pwd)/config.yaml:/pywsvisualization/config.yaml --network=iotstack -t pywsvisualization:<version> -c config.yaml
+    ```
