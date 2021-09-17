@@ -12,15 +12,15 @@ preset:
         broker: *amq_connect_info
         credential: *amq_credential
         exchange: "visual"
-        binding_keys: # Default Queue Logic will be: <binding_key>.robot.<id>
-          - "visual.plm.personnel."
+        queue: "visual_plm_personnel_rk"
+        handler: "personnel_msg_handler"
     - pub_sub_2: &sub_visual_rmt
         type: "amq"
         broker: *amq_connect_info
         credential: *amq_credential
         exchange: "visual"
-        binding_keys: # Default Queue Logic will be: <binding_key>.robot.<id>
-          - "visual.rmt.robot."
+        queue: "visual_rmt_robot_rk"
+        handler: "robot_msg_handler"
   render:
     map_renders:
       - map_render_1: &map_render_1
@@ -61,6 +61,7 @@ preset:
           uwb_pos_color: [ 0,0,0 ]
           est_pos_color: [ 0,0,255 ]
           ray_cast_color: [ 255,0,255 ]
+          enable_ray_cast_render: False
           size: 3
     attributes: &attributes
       scaling: 5
@@ -233,6 +234,9 @@ scene:
   particles: &particles
     - id: '1'
       render: *particle_1
+    - id: '2'
+      render: *particle_1
+
   maps:
     - id: '1'
       render: *map_render_1

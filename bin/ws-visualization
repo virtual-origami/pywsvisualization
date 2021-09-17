@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pywsvisualization.cli
+from pywsvisualization.cli import app_main
 
 if __name__ == "__main__":
-    pywsvisualization.cli.main()
+    app_main()

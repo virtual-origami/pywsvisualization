@@ -44,6 +44,24 @@ class WSRobot:
         self.warn_zone = warn_zone
         self.red_zone = red_zone
 
+    def draw_text_label(self, screen, text, coordinates):
+        try:
+            _center_x = scale(coordinates[0])
+            _center_y = scale(coordinates[1])
+            font = pg.font.Font(None, 20)
+            font_color = (0, 0, 0)
+            font_background = pg.Color(self.warn_zone["color"]) #(255, 255, 255, 1)
+            t = font.render(text, True, font_color, font_background)
+            t_rect = t.get_rect()
+            t_rect.centerx, t_rect.centery = _center_x, _center_y + 20 + 20
+            screen.blit(t, t_rect)
+        except AssertionError as e:
+            logger.error(f'Robot: draw_text_label: failed: {self.id}')
+            traceback.print_exc()
+        except Exception as e:
+            logger.error(f'Robot: draw_text_label: failed: {self.id}')
+            traceback.print_exc()
+
     def draw(self, screen):
         """
         Draw Robot Visualization
@@ -59,6 +77,8 @@ class WSRobot:
                        color=pg.Color(self.red_zone["color"]),
                        center=scale(self.base),
                        radius=scale(self.red_zone["size"]))
+
+        self.draw_text_label(screen=screen, coordinates=[self.base[0], self.base[1]], text="robot_" + str(self.id))
 
         pg.draw.line(surface=screen,
                      color=self.color,
@@ -100,6 +120,7 @@ class WSRobot:
         pg.draw.circle(surface=screen, color=self.color, center=scale(self.wrist), radius=self.joint_width)
         pg.draw.circle(surface=screen, color=(255, 255, 255), center=scale(self.wrist),
                        radius=self.joint_width / 2)
+
 
 
 class WSRobots:

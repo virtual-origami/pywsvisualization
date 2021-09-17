@@ -16,7 +16,8 @@ logger.addHandler(handler)
 
 
 class WSParticle:
-    def __init__(self, id, ref_pos_color, uwb_pos_color, est_pos_color, ray_cast_color, center, radius):
+    def __init__(self, id, ref_pos_color, uwb_pos_color, est_pos_color, ray_cast_color, center, radius,
+                 enable_ray_cast_render):
         """
         Initialization of Particle (personnel as a point object)
         :param id: personnel ID
@@ -32,12 +33,31 @@ class WSParticle:
         self.uwb_pos_color = uwb_pos_color
         self.est_pos_color = est_pos_color
         self.ray_cast_color = ray_cast_color
+        self.enable_ray_cast_render = enable_ray_cast_render
         self.ref_center = center
         self.uwb_center = center
         self.est_center = center
         self.radius = radius
         self.world_view = None
         self.ref_heading = None
+
+    def draw_text_label(self, screen, text, coordinates):
+        try:
+            _center_x = scale(coordinates[0])
+            _center_y = scale(coordinates[1])
+            font = pg.font.Font(None, 15)
+            font_color = (0, 0, 0)
+            font_background = (255, 255, 255, 1)
+            t = font.render(text, True, font_color, font_background)
+            t_rect = t.get_rect()
+            t_rect.centerx, t_rect.centery = _center_x, _center_y + 15 + 3
+            screen.blit(t, t_rect)
+        except AssertionError as e:
+            logger.error(f'Robot: draw_text_label: failed: {self.id}')
+            traceback.print_exc()
+        except Exception as e:
+            logger.error(f'Robot: draw_text_label: failed: {self.id}')
+            traceback.print_exc()
 
     def draw(self, screen):
         """
@@ -47,7 +67,7 @@ class WSParticle:
         """
         try:
             if self.ref_center is not None and self.uwb_center is not None and self.est_center is not None:
-                if self.world_view is not None:
+                if self.world_view is not None and self.enable_ray_cast_render:
                     for ray in self.world_view:
                         pg.draw.line(surface=screen, color=self.ray_cast_color, start_pos=scale(self.ref_center),
                                      end_pos=scale(ray["contact_point"]), width=1)
@@ -63,7 +83,8 @@ class WSParticle:
                                color=self.est_pos_color,
                                center=scale(self.est_center),
                                radius=self.radius)
-
+                self.draw_text_label(screen=screen, coordinates=[self.ref_center[0], self.ref_center[1]],
+                                     text="P_" + str(self.id))
                 if self.ref_heading is not None:
                     num = scale(self.ref_heading['end'])[1] - scale(self.ref_heading['start'])[1]
                     dem = scale(self.ref_heading['end'])[0] - scale(self.ref_heading['start'])[0]
@@ -105,6 +126,7 @@ class WSParticles:
                 uwb_color = particle["render"]["uwb_pos_color"]
                 est_color = particle["render"]["est_pos_color"]
                 ray_cast_color = particle["render"]["ray_cast_color"]
+                enable_ray_cast_render = particle["render"]["enable_ray_cast_render"]
                 self.particles.append(WSParticle(id=particle["id"],
                                                  ref_pos_color=(ref_color[0], ref_color[1], ref_color[2]),
                                                  uwb_pos_color=(uwb_color[0], uwb_color[1], uwb_color[2]),
@@ -112,7 +134,8 @@ class WSParticles:
                                                  ray_cast_color=(
                                                  ray_cast_color[0], ray_cast_color[1], ray_cast_color[2]),
                                                  center=None,
-                                                 radius=particle["render"]["size"]))
+                                                 radius=particle["render"]["size"],
+                                                 enable_ray_cast_render=enable_ray_cast_render))
         except AssertionError as e:
             logging.critical(e)
             exc_type, exc_value, exc_traceback = sys.exc_info()
