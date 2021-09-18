@@ -1,5 +1,7 @@
 FROM python:3.8.3-slim-buster AS base
 
+RUN apt-get update && apt-get install -y pygame
+
 # Dedicated Workdir for App
 WORKDIR /pywsvisualization
 
