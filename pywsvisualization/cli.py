@@ -111,7 +111,7 @@ def read_config(yaml_file, rootkey):
         logger.error('YAML Configuration File not Found.')
 
 
-def main():
+def app_main():
     """Initialization"""
     args = parse_arguments()
     if not os.path.isfile(args.config):
@@ -121,7 +121,3 @@ def main():
     event_loop = asyncio.get_event_loop()
     event_loop.add_signal_handler(signal.SIGHUP, functools.partial(signal_handler, name='SIGHUP'))
     event_loop.run_until_complete(app(event_loop, args.config))
-
-
-if __name__ == "__main__":
-    main()
